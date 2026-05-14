@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: #1e1e1e;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 700px;
+      margin: auto;
+      background: #2b2b2b;
+      padding: 30px;
+      border-radius: 15px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 36px;
+      line-height: 1.4;
+    }
+    .row { margin-bottom: 18px; }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      background: #3b3b3b;
+      color: white;
+      font-size: 15px;
+    }
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #1976d2;
+      color: white;
+      font-size: 15px;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.9; }
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .button-row button { flex: 1; }
+    .result { margin-top: 20px; }
+    #result {
+      width: 100%;
+      font-size: 16px;
+      font-weight: bold;
+      background: #1a1a1a;
+      text-align: center;
+      border: 1px dashed #555;
+    }
+    .copy-btn {
+      width: 100%;
+      margin-top: 12px;
+      background: #4caf50;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.5;
+    }
+
+    /* MOBILE RESPONSIVE */
+    @media screen and (max-width:768px){
+      body { padding: 10px; }
+      .container { padding: 20px; border-radius: 12px; }
+      h2 { font-size: 28px; }
+      .button-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>FSF File Naming Tool</h2>
+
+  <div class="row">
+    <label>Fellow</label>
+    <select id="fellow"></select>
+  </div>
+
+  <div class="row">
+    <label>Week Type</label>
+    <select id="week" onchange="updateTasks()"></select>
+  </div>
+
+  <div class="row">
+    <label>Task Type</label>
+    <select id="task"></select>
+  </div>
+
+  <div class="row">
+    <label>Date</label>
+    <input type="text" id="date">
+  </div>
+
+  <div class="row">
+    <label>Version</label>
+    <select id="version">
+      <option value="">Select Version</option>
+      <option>v01</option>
+      <option>v02</option>
+      <option>v03</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <label>Status</label>
+    <select id="status">
+      <option value="">Select Status</option>
+      <option>fin</option>
+    </select>
+  </div>
+
+  <div class="button-row">
+    <button onclick="generateName()">Generate</button>
+    <button onclick="resetFields()" style="background:#666;">Reset</button>
+  </div>
+
+  <div class="result">
+    <input type="text" id="result" readonly placeholder="Filename will appear here">
+  </div>
+
+  <button class="copy-btn" onclick="copyResult()">Copy Filename</button>
+
+  <div class="footer">
+    Developed by K Rajput • 2026
+  </div>
+</div>
+
+<script>
+const projectMap = {
+    "Aadya Ghosh": "AADG", "Aditya Mandre": "ADIM", "Alisha Sinha": "ALIS",
+    "Amal P S": "AMPS", "Anshika Kumari": "ANSK", "Anushka Kulkarni": "ANUK",
+    "Aribah Armin": "ARIA", "Aryansh Dutta": "ARYD", "Ayush S Ranoji": "AYSR",
+    "Bhavya Singh": "BHAS", "Carol Mikhail Furtado": "CAMF", "Debayan Dey": "DEBD",
+    "Dhairya Patel": "DHAP", "Dravya Shah": "DRAS", "Fitha Fathima": "FIFA",
+    "Gargee Kakaty": "GARK", "Helna Tahilyani": "HETA", "Jagadeesh Chappa": "JAGC",
+    "Jaspreet Singh": "JASS", "Joshua S": "JOSH", "Kanwaljeetsingh Rajput": "KARA",
+    "Khushi Kashyap": "KHUK", "Kiruthika N": "KIRN", "MD MOHAFIZ ANSARI": "MDMA",
+    "Meghana Kothekar": "MEGK", "Nishtha Sharma": "NISS", "Palak Marothiya": "PALM",
+    "PRAVEEN MANOJ N": "PRMN", "Punukollu Sri Haasini": "PUSI", "Purushottam Kumar": "PUKU",
+    "Ram Mohan S": "RAMS", "SAAKSHI SHARMA": "SAKS", "Sakshi Vyas": "SAKV",
+    "Samiha Islam": "SAIL", "Sanchita Das": "SAND", "Sayuri Kapoor": "SAYK",
+    "Sethu Lekshmi R": "SELR", "SHAHEEM V": "SHAV", "Sharon K D": "SHKD",
+    "Suhani Sharma": "SUHS", "Suyash Nilesh Sable": "SYNS", "Tanvi Dahikar": "TAND",
+    "Vaibhavi Mishra": "VAMI", "Vaishali Bhatt": "VABH", "Vikas Malesh Manhinde": "VIMM"
+};
+
+const designMap = {
+  "Workshop Week 1 - Inkscape":"W1Ink",
+  "Workshop Week 2 - GIMP":"W2Gmp",
+  "Workshop Week 3 - Scribus":"W3Scr",
+  "Workshop Week 4 - Synfig Studio":"W4Syn",
+  "Workshop Week 5 - Blender":"W5Bld",
+  "Project Week 6 - Design Project":"W6Dsn",
+  "Project Week 7 - Animation Project":"W7Ani",
+  "Leadership Week 8 - Workshop Conducted":"W8Ldr"
+};
+
+const taskMap = {
+  "Assignment -01":"A01", "Assignment -02":"A02", "Assignment -03":"A03",
+  "Task -01":"T01", "Task -02":"T02", "Design":"Dsn", "Animation":"Ani", "Workshop":"Wrk"
+};
+
+const workshopTasks = ["Assignment -01", "Assignment -02", "Assignment -03", "Task -01", "Task -02"];
+const projectTasks = ["Design", "Animation", "Workshop"];
+
+function getShortDate(){
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(-2);
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return yy + mm + dd;
+}
+
+function loadDropdowns(){
+  const fellow = document.getElementById("fellow");
+  fellow.innerHTML = '<option value="">Select Fellow</option>';
+  Object.keys(projectMap).sort().forEach(name=>{
+    let opt=document.createElement("option");
+    opt.value=name; opt.text=name;
+    fellow.appendChild(opt);
+  });
+
+  const week=document.getElementById("week");
+  week.innerHTML = '<option value="">Select Week Type</option>';
+  Object.keys(designMap).forEach(name=>{
+    let opt=document.createElement("option");
+    opt.value=name; opt.text=name;
+    week.appendChild(opt);
+  });
+
+  document.getElementById("task").innerHTML = '<option value="">Select Task Type</option>';
+  document.getElementById("date").value = getShortDate();
+}
+
+function updateTasks(){
+  const week=document.getElementById("week").value;
+  const task=document.getElementById("task");
+  task.innerHTML='<option value="">Select Task Type</option>';
+  
+  let tasks = week.startsWith("Workshop Week") ? workshopTasks : projectTasks;
+  tasks.forEach(t=>{
+    let opt=document.createElement("option");
+    opt.value=t; opt.text=t;
+    task.appendChild(opt);
+  });
+}
+
+function generateName(){
+  const fellow=document.getElementById("fellow").value;
+  const week=document.getElementById("week").value;
+  const task=document.getElementById("task").value;
+  const date=document.getElementById("date").value;
+  const version=document.getElementById("version").value;
+  const status=document.getElementById("status").value;
+
+  if(!fellow || !week || !task || !version){
+    alert("Please fill all required fields");
+    return;
+  }
+
+  let filename = projectMap[fellow] + designMap[week] + taskMap[task] + "-" + date + "-" + version;
+  if(status !== "") filename += "-" + status;
+  
+  document.getElementById("result").value = filename;
+}
+
+async function copyResult() {
+  const resultField = document.getElementById("result");
+  const text = resultField.value;
+
+  if (!text) {
+    alert("Please generate a file name first!");
+    return;
+  }
+
+  // Modern Async Clipboard API
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("Copied Successfully ✅");
+    } catch (err) {
+      fallbackCopy(resultField);
+    }
+  } else {
+    fallbackCopy(resultField);
+  }
+}
+
+function fallbackCopy(field) {
+  field.select();
+  field.setSelectionRange(0, 99999);
+  try {
+    const successful = document.execCommand('copy');
+    if(successful) alert("Copied Successfully ✅");
+    else alert("Copy failed. Please use Ctrl+C.");
+  } catch (err) {
+    alert("Unable to copy. Please manually select the text.");
+  }
+}
+
+function resetFields(){
+  document.getElementById("fellow").value="";
+  document.getElementById("week").value="";
+  document.getElementById("task").innerHTML = '<option value="">Select Task Type</option>';
+  document.getElementById("version").value="";
+  document.getElementById("status").value="";
+  document.getElementById("result").value="";
+  document.getElementById("date").value = getShortDate();
+}
+
+window.onload = loadDropdowns;
+</script>
+
+</body>
+</html>
