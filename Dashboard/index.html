@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: gray;
+      margin-bottom: 20px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    button {
+      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .group-btn.active,
+    .week-btn.active {
+      background: #111827;
+      color: white;
+    }
+
+    .group-btn,
+    .week-btn {
+      background: #e5e7eb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th,
+    td {
+      padding: 14px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background: #f3f4f6;
+    }
+
+    .badge {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+      display: inline-block;
+    }
+
+    .Approved {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .Checked {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .Submitted {
+      background: #ffedd5;
+      color: #c2410c;
+    }
+
+    .Pending {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .Late {
+      background: #fef9c3;
+      color: #854d0e;
+    }
+
+    .Missing {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    @media (max-width: 768px) {
+
+      th,
+      td {
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="card">
+    <h1>FOCAL - FSF 2026 Fellowship Dashboard</h1>
+    <div class="subtitle">
+      Weekly Fellowship Tracking Portal
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Resources</h2>
+    <div class="button-row">
+      <a href="https://sites.google.com/view/fsf2026/home" target="_blank"> <button>File Name Generator</button> </a>
+      <a href="https://youtu.be/M_Dygcyc_Oo" target="_blank"> <button>Score Point Info Video</button> </a>
+      <button onclick="window.open('https://docs.google.com/document/d/1X-33LrqFEDI8xytzQOJTHAV-McomCTwMu3VINHappus/edit?usp=sharing', '_blank')">Guidelines</button>
+      <a href="https://www.youtube.com/watch?v=rddwCylrvlk" target="_blank"> <button>Roles and Responsibilites</button> </a>
+      
+    </div>
+  </div>
+
+  <div class="card">
+
+    <div class="button-row" id="groupButtons"></div>
+
+    <br>
+
+    <div class="button-row" id="weekButtons"></div>
+
+    <h2 id="sectionTitle"></h2>
+
+    <div style="overflow-x:auto;">
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+let dashboardData = {};
+let selectedGroup = 'A';
+let selectedWeek = 1;
+
+const groups = ['A', 'B', 'C', 'D', 'E'];
+
+function loadData() {
+
+  google.script.run
+    .withSuccessHandler((data) => {
+      dashboardData = data;
+      renderGroupButtons();
+      renderWeekButtons();
+      renderTable();
+    })
+    .getDashboardData();
+}
+
+function renderGroupButtons() {
+
+  const container = document.getElementById('groupButtons');
+
+  container.innerHTML = '';
+
+  groups.forEach(group => {
+
+    const btn = document.createElement('button');
+
+    btn.innerText = 'Group ' + group;
+
+    btn.className = 'group-btn';
+
+    if (group === selectedGroup) {
+      btn.classList.add('active');
+    }
+
+    btn.onclick = () => {
+      selectedGroup = group;
+      renderGroupButtons();
+      renderTable();
+    };
+
+    container.appendChild(btn);
+  });
+}
+
+function renderWeekButtons() {
+
+  const container = document.getElementById('weekButtons');
+
+  container.innerHTML = '';
+
+  for (let i = 1; i <= 8; i++) {
+
+    const btn = document.createElement('button');
+
+    btn.innerText = 'Week ' + i;
+
+    btn.className = 'week-btn';
+
+    if (i === selectedWeek) {
+      btn.classList.add('active');
+    }
+
+    btn.onclick = () => {
+      selectedWeek = i;
+      renderWeekButtons();
+      renderTable();
+    };
+
+    container.appendChild(btn);
+  }
+}
+
+function renderTable() {
+  document.getElementById('sectionTitle').innerText =
+    `Group ${selectedGroup} - Week ${selectedWeek}`;
+
+  const head = document.getElementById('tableHead');
+  const body = document.getElementById('tableBody');
+
+  head.innerHTML = '';
+  body.innerHTML = '';
+
+  // Data filtering logic based on the selected week
+  if (selectedWeek <= 5) {
+    head.innerHTML = `
+      <tr>
+        <th>Fellow Name</th>
+        <th>Status</th>
+        <th>Score</th>
+      </tr>
+    `;
+
+    dashboardData.weekly
+      .filter(row => row.Group === selectedGroup)
+      .forEach(row => {
+        const status = row['W' + selectedWeek] || 'Pending';
+        body.innerHTML += `
+          <tr>
+            <td>${row.Name}</td>
+            <td>
+              <span class="badge ${status}">
+                ${status}
+              </span>
+            </td>
+            <td>${row['Weekly Score'] || 0}</td>
+          </tr>
+        `;
+      });
+  } 
+  else if (selectedWeek === 6 || selectedWeek === 7) {
+    head.innerHTML = `
+      <tr>
+        <th>Fellow Name</th>
+        <th>P1</th>
+        <th>P2</th>
+        <th>Project Score</th>
+      </tr>
+    `;
+
+    dashboardData.project
+      .filter(row => row.Group === selectedGroup)
+      .forEach(row => {
+        body.innerHTML += `
+          <tr>
+            <td>${row.Name}</td>
+            <td>${row.P1 || '-'}</td>
+            <td>${row.P2 || '-'}</td>
+            <td>${row['Project Score'] || 0}</td>
+          </tr>
+        `;
+      });
+  } 
+  else if (selectedWeek === 8) { // Fixed Syntax Error here
+    head.innerHTML = `
+      <tr>
+        <th>Fellow Name</th>
+        <th>Material</th>
+        <th>Conduct</th>
+        <th>Report</th>
+        <th>Week8 Score</th>
+      </tr>
+    `;
+
+    // Ensure your "4_Week8_Leadership" sheet has a "Group" column
+    dashboardData.leadership
+      .filter(row => row.Group === selectedGroup) 
+      .forEach(row => {
+        body.innerHTML += `
+          <tr>
+            <td>${row.Name}</td>
+            <td>${row.Material || 0}</td>
+            <td>${row.Conduct || 0}</td>
+            <td>${row.Report || 0}</td>
+            <td>${row['Week8 Score'] || 0}</td>
+          </tr>
+        `;
+      });
+  }
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>
